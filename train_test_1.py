@@ -3,7 +3,7 @@ import torch
 from datasets import load_dataset
 from trl import Trainer, TrainingArguments
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from datasets import load_dataset
+
 
 
 BATCH_SIZE = 64
@@ -18,10 +18,18 @@ def get_model_and_tok():
 
     return model, tokenizer
 
-""" Set up the dataset"""
 
-def get_dataset():
-    pass
+
+def get_dataset(dataset):
+    """So each data point will be the max token length the model can handle unless the max will lead to a different pdf.
+
+    
+    """
+    return dataset.map(preprocess_function, batched=True)
+
+
+def preprocess_function(examples):
+    return tokenizer(examples["text"], padding="max_length", truncation=True)
 
 
 def get_trainer(model, tokenizer, dataset):
@@ -35,6 +43,7 @@ def get_trainer(model, tokenizer, dataset):
         num_train_epochs=2,
         eval_strategy="epoch",
         save_strategy="epoch",
+        fp_16=True,
     )
 
     trainer = Trainer(
