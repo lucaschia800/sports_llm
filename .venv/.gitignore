@@ -1,2 +1,7 @@
 venv/
 .venv/
+all_articles.csv
+espn_articles.csv
+nfl_espn_articles.csv
+
+
