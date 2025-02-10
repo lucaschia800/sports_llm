@@ -1,1 +1,12 @@
 .venv/
+venv/
+.venv/
+all_articles.csv
+espn_articles.csv
+nfl_espn_articles.csv
+nba_espn_articles.csv
+football_game_id.json
+nba_game_ids.json
+nfl_game_ids.json
+
+
