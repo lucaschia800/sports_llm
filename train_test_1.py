@@ -20,24 +20,37 @@ def get_model_and_tok():
 
 
 
-def get_dataset(dataset):
-    """So each data point will be the max token length the model can handle unless the max will lead to a different pdf.
-
+def load_datasets():
+    """
+    Loading in the datasets
     
     """
-    return dataset.map(preprocess_function, batched=True)
+    ds = load_dataset('GEM/sportsett_basketball')
+    ds_train = ds['train']
+    ds_val = ds['validation']
+    ds_test = ds['test']
+
+    return ds_train, ds_val, ds_test
 
 
 def preprocess_function(examples):
-    return tokenizer(examples["text"], padding="max_length", truncation=True)
+    #for now we are just tokenizing without padding but if it turns out llama doesn't accept then we will pad
+    return tokenizer(examples["target"], truncation=True)
 
 
-def get_trainer(model, tokenizer, dataset):
+def process_dataset(ds):
+    """Tokenizing and padding dataset"""
+    ds = ds.map(preprocess_function, batched=True)
+    return ds
+
+
+
+def get_trainer(model, tokenizer, ds_train, ds_val):
     """Setting up and instantiating Trainer"""
 
     training_args = TrainingArguments(
         output_dir="./results",
-        learning_rate=1e-3,
+        learning_rate=1e-4,
         per_device_train_batch_size=BATCH_SIZE,
         per_device_eval_batch_size=BATCH_SIZE,
         num_train_epochs=2,
@@ -49,18 +62,26 @@ def get_trainer(model, tokenizer, dataset):
     trainer = Trainer(
         model = model,
         args = training_args,
-        #add datasets 
+        tokenizer = tokenizer,
+        train_dataset = ds_train,
+        eval_dataset = ds_val,
+
 
 
     )
+
+    return trainer
 
 
 if __name__ == "__main__":
     model, tokenizer = get_model_and_tok()
 
-    dataset = get_dataset()
+    ds_train, ds_val, ds_test = load_datasets()
 
-    trainer = get_trainer(model, tokenizer, dataset)
+    ds_train_tokenized = process_dataset(ds_train)
+    ds_val_tokenized = process_dataset(ds_val)
+
+    trainer = get_trainer(model, tokenizer, ds_train_tokenized, ds_val_tokenized)
 
     trainer.train()
 
