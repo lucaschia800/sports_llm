@@ -1,10 +1,16 @@
 from torch import nn
 import torch
 from datasets import load_dataset
-from trl import Trainer, TrainingArguments
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments
+from huggingface_hub import login
+import os
 
+#login to huggingface
 
+hf_token = os.getenv('HUGGINGFACE_TOKEN')
+
+if hf_token:
+    login(token = hf_token)
 
 BATCH_SIZE = 64
 
@@ -12,7 +18,7 @@ def get_model_and_tok():
     """Instantiating model and tokenizer"""
     model_name = "meta-llama/Llama-3.1-8B"
 
-    model = AutoModelForCausalLM.from_pretrained(model_name)
+    model = AutoModelForCausalLM.from_pretrained(model_name, device_map = 'auto')
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
@@ -33,7 +39,7 @@ def load_datasets():
     return ds_train, ds_val, ds_test
 
 
-def preprocess_function(examples):
+def preprocess_function(examples, tokenizer):
     #for now we are just tokenizing without padding but if it turns out llama doesn't accept then we will pad
     return tokenizer(examples["target"], truncation=True)
 
@@ -56,7 +62,7 @@ def get_trainer(model, tokenizer, ds_train, ds_val):
         num_train_epochs=2,
         eval_strategy="epoch",
         save_strategy="epoch",
-        fp_16=True,
+        bf16=True,
     )
 
     trainer = Trainer(
