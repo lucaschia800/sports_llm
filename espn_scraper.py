@@ -46,7 +46,7 @@ async def main(game_ids, filename, sport):
 #2024 -> 670
 #2023 ->547
 
-sports = ['nfl', 'nba']
+sports = ['nfl', 'nba', 'nhl']
 
 async def process_sports():
   for sport in sports:
